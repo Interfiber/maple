@@ -1,5 +1,6 @@
 # Maple
-Rust GUI Library Built ontop of the glfw crate
+Rust GUI Library Built on top of the glfw crate
+
 
 
 ## Prerequisites

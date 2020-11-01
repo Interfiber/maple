@@ -1,7 +1,7 @@
 [package]
 name = "maple"
 version = "0.1.0"
-description = "Rust GUI Library Built ontop of the glfw crate"
+description = "Rust GUI Library Built on top of the glfw crate"
 authors = ["Interfiber"]
 edition = "2018"
 
