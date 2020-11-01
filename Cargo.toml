@@ -1,0 +1,11 @@
+[package]
+name = "maple"
+version = "0.1.0"
+description = "Rust GUI Library Built ontop of the glfw crate"
+authors = ["Interfiber"]
+edition = "2018"
+
+[dependencies]
+log = "0.4.0"
+simple_logger = "1.11.0"
+glfw = "0.40.0"
