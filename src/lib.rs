@@ -87,16 +87,24 @@ impl Window {
 				window.set_cursor(Some(arrow_cursor));
 			}
 		}
-		if let DynamicImage::ImageRgba8(icon) = open_image("maple-cursor-image.png").unwrap() {
-        //Resize icon while preserving aspect ratio
-        let resized_icon = resize(&icon, 32, icon.height() / icon.width() * 32, Nearest);
+		if std::path::Path::new("maple-cursor-image.png").exists(){
+			if let DynamicImage::ImageRgba8(icon) = open_image("maple-cursor-image.png").unwrap() {
+        		//Resize icon while preserving aspect ratio
+        		let resized_icon = resize(&icon, 32, icon.height() / icon.width() * 32, Nearest);
 
-        let cursor = glfw::Cursor::create(resized_icon, 0, 0);
+        		let cursor = glfw::Cursor::create(resized_icon, 0, 0);
 
-        window.set_cursor(Some(cursor));
+				window.set_cursor(Some(cursor));
+			}
     	}
 		info!("Running load_func code on other thread...");
 		std::thread::spawn(move||{
+			// Load functions into thread
+			pub fn open() -> bool {
+				unsafe {
+					return IS_OPEN;
+				}
+			}
 			load_func("Start".to_string());
 		});
 
