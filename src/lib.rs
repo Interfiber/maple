@@ -1,6 +1,8 @@
 use simple_logger::SimpleLogger;
+use std::io::Read;
+use std::fs::File;
 use log::*;
-extern crate glfw;
+
 
 use glfw::{Context};
 
@@ -34,6 +36,18 @@ impl Window {
 			}else {
 				return true
 			}
+		}
+	}
+	pub fn set_cursor_image(&self, image: &str){
+		let mut img_file = File::open(image).unwrap();
+		let mut img_data = Vec::new();
+		match img_file.read_to_end(&mut img_data){
+			Ok(_) => println!("Read data from {}!", image),
+			Err(err) => println!("{}", err)
+		}
+		match std::fs::write("maple-cursor-image.png", img_data){
+			Ok(_) => println!("Saved Cursor image tomaple-cursor-image.png"),
+			Err(err) => println!("{}! Failed to save cursor image to maple-cursor-image.png!", err)
 		}
 	}
 	pub fn set_cursor_type(&self, cursor: &str){
@@ -73,6 +87,14 @@ impl Window {
 				window.set_cursor(Some(arrow_cursor));
 			}
 		}
+		if let DynamicImage::ImageRgba8(icon) = open_image("maple-cursor-image.png").unwrap() {
+        //Resize icon while preserving aspect ratio
+        let resized_icon = resize(&icon, 32, icon.height() / icon.width() * 32, Nearest);
+
+        let cursor = glfw::Cursor::create(resized_icon, 0, 0);
+
+        window.set_cursor(Some(cursor));
+    	}
 		info!("Running load_func code on other thread...");
 		std::thread::spawn(move||{
 			load_func("Start".to_string());
@@ -84,5 +106,14 @@ impl Window {
 		while !window.should_close() {
 		    glfw.poll_events();
  	  }
+  }
+  pub fn cleanup(&self){
+	  info!("Removing Caches...");
+	  if std::path::Path::new("maple-cursor-image.png").exists(){
+		  match std::fs::remove_file("maple-cursor-image.png"){
+			  Ok(_) => println!("Removed Cursor icon cache!"),
+			  Err(err) => println!("Error: {}! Failed to remove cursor icon cache!", err)
+		  }
+	  }
   }
 }
