@@ -10,11 +10,9 @@ fn main(){
 		height: 400,
 		width: 400,
 		name: String::from("Maple Test")
-	};
-	// Set cursor to image
-	win.set_cursor_image("cursor.png");
+    };
+    // Assign Window Icon
+    win.set_icon("cursor.png");
 	// Create the window on the screen
 	win.start_window(after_load);
-	// Remove caches
-	win.cleanup();
 }

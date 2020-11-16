@@ -11,10 +11,8 @@ fn main(){
 		width: 400,
 		name: String::from("Maple Test")
 	};
-	// Set cursor to image
-	win.set_cursor_image("cursor.png");
+	// Set window to fullscreen
+	win.set_fullscreen();
 	// Create the window on the screen
 	win.start_window(after_load);
-	// Remove caches
-	win.cleanup();
 }

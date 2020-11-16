@@ -13,6 +13,7 @@ static mut IS_OPEN: bool = false;
 static mut HAND_CURSOR: bool = false;
 static mut CROSSHAIR_CURSOR: bool = false;
 static mut DEFAULT_CURSOR: bool = false;
+static mut IS_FULLSCREEN: bool = false;
 pub struct Window {
 	pub title: String,
 	pub height: u32,
@@ -36,6 +37,24 @@ impl Window {
 			}else {
 				return true
 			}
+		}
+	}
+	pub fn set_fullscreen(&self){
+		unsafe {
+			IS_FULLSCREEN = true;
+		}
+	}
+	pub fn set_icon(&self, icon: &str){
+		info!("Caching {} as maple-window-icon.png...", icon);
+		let mut img_file = File::open(icon).unwrap();
+		let mut img_data = Vec::new();
+		match img_file.read_to_end(&mut img_data){
+			Ok(_) => println!("Read data from {}!", icon),
+			Err(err) => println!("{}", err)
+		}
+		match std::fs::write("maple-window-icon.png", img_data){
+			Ok(_) => println!("Saved Cursor image to maple-window-icon.png"),
+			Err(err) => println!("{}! Failed to save cursor image to maple-window-icon.png!", err)
 		}
 	}
 	pub fn set_cursor_image(&self, image: &str){
@@ -70,6 +89,7 @@ impl Window {
 		     .expect("Failed to create GLFW window.");
 		window.set_key_polling(true);
 		window.make_current();
+
 		info!("Window Created!");
 		info!("Checking for cursor type...");
 		unsafe {
@@ -96,7 +116,49 @@ impl Window {
 
 				window.set_cursor(Some(cursor));
 			}
-    	}
+		}
+		info!("Checking if window needs to be fullscreen...");
+		unsafe {
+			if IS_FULLSCREEN{
+				info!("Setting window to fullscreen...");
+			      glfw.with_primary_monitor_mut(|_: &mut _, m: Option<&glfw::Monitor>| {
+                            let monitor = m.unwrap();
+
+                            let mode = monitor.get_video_mode().unwrap();
+
+                            window.set_monitor(
+                                glfw::WindowMode::FullScreen(&monitor),
+                                0,
+                                0,
+                                mode.width,
+                                mode.height,
+                                Some(mode.refresh_rate),
+                            );
+
+                            info!(
+                                "{}x{} fullscreen enabled at {}Hz on monitor {}",
+                                mode.width,
+                                mode.height,
+                                mode.refresh_rate,
+                                monitor.get_name().unwrap()
+                            );
+                    });
+            }
+
+		}
+		info!("Checking for window icon...");
+		if std::path::Path::new("maple-window-icon.png").exists(){
+			if let DynamicImage::ImageRgba8(icon) = open_image("maple-window-icon.png").unwrap() {
+				//Set the icon to be multiple sizes of the same icon to account for scaling
+				info!("Setting Window Icon...");
+				window.set_icon(vec![
+					resize(&icon, 16, 16, Nearest),
+					resize(&icon, 32, 32, Nearest),
+					resize(&icon, 48, 48, Nearest),
+				]);
+				info!("Done Setting Window Icon!");
+			}
+		}
 		info!("Running load_func code on other thread...");
 		std::thread::spawn(move||{
 			// Load functions into thread
