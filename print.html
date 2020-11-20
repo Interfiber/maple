@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="chapter_1.html"><strong aria-hidden="true">1.</strong> Chapter 1: Getting Started</a></li><li class="chapter-item expanded "><a href="chapter_2.html"><strong aria-hidden="true">2.</strong> Chapter 2: Our First Window</a></li><li class="chapter-item expanded "><a href="cursors_oh_my.html"><strong aria-hidden="true">3.</strong> Chapter 3: Cursors Oh My!</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="chapter_1.html"><strong aria-hidden="true">1.</strong> Chapter 1: Getting Started</a></li><li class="chapter-item expanded "><a href="chapter_2.html"><strong aria-hidden="true">2.</strong> Chapter 2: Our First Window</a></li><li class="chapter-item expanded "><a href="cursors_oh_my.html"><strong aria-hidden="true">3.</strong> Chapter 3: Cursors Oh My!</a></li><li class="chapter-item expanded "><a href="chapter_4.html"><strong aria-hidden="true">4.</strong> Chapter 4: Fullscreen windows</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -241,6 +241,26 @@ fn main(){
 }
 </code></pre></pre>
 <p>This code will set the cursor to the image from &quot;cursor.png&quot;. You will also see the cleanup function. This will remove some cursor caches generated at runtime. In this case it will delete a file called <code>maple-cursor-image.png</code></p>
+<h1><a class="header" href="#chapter-4-fullscreen-windows" id="chapter-4-fullscreen-windows">Chapter 4: Fullscreen windows</a></h1>
+<p>If you want a window that is fullscreen in maple its really easy. You can use the following code to make a fullscreen window</p>
+<pre><pre class="playground"><code class="language-rust">use maple::*;
+fn after_load(place_holder: String) -&gt; String{
+	return place_holder;
+}
+fn main(){
+	let win = Window {
+		title: String::from(&quot;My Awsome Window!&quot;),
+		height: 400,
+		width: 400,
+		name: String::from(&quot;Maple Test&quot;)
+	};
+	// Set window to fullscreen
+	win.set_fullscreen();
+	// Create the window on the screen
+	win.start_window(after_load);
+}
+</code></pre></pre>
+<p>&quot;win.set_fullscreen()&quot; makes the window fullscreen</p>
 
                     </main>
 
