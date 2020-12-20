@@ -1,7 +1,7 @@
 use maple::*;
 fn main(){
 	let win = OSWindow {
-		title: String::from("My Epic Amazing Window!"),
+        title: String::from("My Epic Amazing Window!"),
         x: 400,
         y: 400,
         log: true
