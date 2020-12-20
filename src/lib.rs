@@ -1,7 +1,7 @@
 // Import Winit Stuff
-use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::{WindowBuilder};
+use winit::event::{Event, WindowEvent};
 // Import std stuff
 use std::io::Read;
 pub struct OSWindow {
@@ -11,6 +11,18 @@ pub struct OSWindow {
 	pub log: bool
 }
 impl OSWindow {
+	pub fn set_transparent(&self, transparent: bool){
+		if self.log {
+			println!("[INF]:: Making Window Transparent...");
+		}
+		match std::fs::write("/tmp/maple_transparent_window", transparent.to_string()){
+			Ok(_) => print!(""),
+			Err(err) => println!("[ERR]:: Failed to create /tmp/maple_transparent_window! Error:\n{}", err)
+		}
+		if self.log {
+			println!("[INF]:: Created /tmp/maple_transparent_window!");
+		}
+	}
 	/// The Set Cursor function is called on the OSWindow. set_cursor()  takes in one argument as a string
 	/// Which is the type of the cursor. When the window is loaded that cursor will be the one shown on screen
 	/// Example:
@@ -64,7 +76,21 @@ impl OSWindow {
 		if self.log {
 			println!("[INF]:: Creating Window Builder...");
 		}
-		let window = WindowBuilder::new().build(&event_loop).unwrap();
+		let mut transparent = false;
+		if std::path::Path::new("/tmp/maple_transparent_window").exists(){
+			if self.log {
+				println!("[INF]:: Making Window Transparent...");
+			}
+			transparent = true;
+			if self.log {
+				println!("[INF]:: Removing file /tmp/maple_transparent_windows...");
+			}
+			match std::fs::remove_file("/tmp/maple_transparent_window"){
+				Ok(_) => print!(""),
+				Err(err) => println!("[ERR]:: Failed to delete /tmp/maple_transparent_window! Error:\n{}", err)
+			}
+		}
+		let window = WindowBuilder::new().with_transparent(transparent).build(&event_loop).unwrap();
 		if self.log {
 			println!("[INF]:: Setting Window Size...");
 		}
@@ -76,6 +102,7 @@ impl OSWindow {
 			println!("[INF]:: Setting Window Title...");
 		}
 		window.set_title(&self.title);
+
 		if std::path::Path::new("/tmp/maple_cursor_type").exists(){
 			if self.log {
 				println!("[INF]:: Setting Cursor Type...");
