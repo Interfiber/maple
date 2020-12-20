@@ -1,12 +1,12 @@
 [package]
 name = "maple"
 version = "0.1.0"
-description = "Rust GUI Library Built on top of the glfw crate"
+description = "Rust GUI Library Built on top of winit"
 authors = ["Interfiber"]
 edition = "2018"
-
+license = "MIT"
+homepage = "https://interfiber.github.io/maple"
+readme = "README.md"
+repository = "https://github.com/Interfiber/maple"
 [dependencies]
-log = "0.4.0"
-simple_logger = "1.11.0"
-glfw = { version = "0.40.0", features=["image"] }
-image = "0.23.11"
+winit = "0.24.0"

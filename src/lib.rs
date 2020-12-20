@@ -1,189 +1,142 @@
-use simple_logger::SimpleLogger;
+// Import Winit Stuff
+use winit::event::{Event, WindowEvent};
+use winit::event_loop::{ControlFlow, EventLoop};
+use winit::window::{WindowBuilder};
+// Import std stuff
 use std::io::Read;
-use std::fs::File;
-use log::*;
-
-
-use glfw::{Context};
-
-use image::imageops::{resize, Nearest};
-use image::{open as open_image, DynamicImage};
-// Statics
-static mut IS_OPEN: bool = false;
-static mut HAND_CURSOR: bool = false;
-static mut CROSSHAIR_CURSOR: bool = false;
-static mut DEFAULT_CURSOR: bool = false;
-static mut IS_FULLSCREEN: bool = false;
-pub struct Window {
+pub struct OSWindow {
 	pub title: String,
-	pub height: u32,
-	pub width: u32,
-	pub name: String
+	pub x: u32,
+	pub y: u32,
+	pub log: bool
 }
-impl Window {
-	pub fn get_title(&self) -> String{
-		return self.title.to_string()
+impl OSWindow {
+	/// The Set Cursor function is called on the OSWindow. set_cursor()  takes in one argument as a string
+	/// Which is the type of the cursor. When the window is loaded that cursor will be the one shown on screen
+	/// Example:
+	/// ```
+	/// use maple::*;
+	/// fn main(){
+	/// 	let win = OSWindow {
+	/// 		title: String::from("My Epic Window with a diffrent cursor"),
+	/// 		x: 400,
+	/// 		y: 400,
+	/// 		log: false
+	/// 	};
+	/// win.set_cursor("CrossHair");
+	/// win.create_window();
+	/// }
+	/// ```
+	/// 
+	pub fn set_cursor(&self, cursor_type: &str){
+		if self.log {
+			println!("[INF]:: Setting Cursor type...");
+		}
+		match std::fs::write("/tmp/maple_cursor_type", cursor_type){
+			Ok(_) => print!(""),
+			Err(err) => println!("[ERR]:: Failed to write to /tmp/maple_cursor_type! Error: \n{}", err)
+		}
+		if self.log {
+			println!("[INF]:: Cursor Setup Complete!");
+		}
 	}
-	pub fn get_width(&self) -> u32 {
-		return self.width
-	}
-	pub fn get_height(&self) -> u32 {
-		return self.height;
-	}
-	pub fn is_open(&self) -> bool{
-		unsafe {
-			if !IS_OPEN {
-				return false
+	/// The Create Window function is called on the OSWindow. create_window() will spawn a GUI Window
+	/// On the users screen with the specified settings delared before the window was launched. Such as color
+	/// Example:
+	/// ```
+	/// use maple::*;
+	/// fn main(){
+	/// 	let win = OSWindow {
+	///			title: String::from("My Epic Amazing Window!"),
+	///         x: 400,
+	///         y: 400,
+	///         log: true
+	///		};
+	///   win.create_window();
+	/// }
+	/// ```
+	pub fn create_window(&self){
+		// Create Winit Stuff
+		if self.log {
+			println!("[INF]:: Creating Event Loop")
+		}
+		let event_loop = EventLoop::new();
+		if self.log {
+			println!("[INF]:: Creating Window Builder...");
+		}
+		let window = WindowBuilder::new().build(&event_loop).unwrap();
+		if self.log {
+			println!("[INF]:: Setting Window Size...");
+		}
+		// Set Window Min Size
+		window.set_min_inner_size(Some(winit::dpi::LogicalSize::new(self.x, self.y)));
+		// Set Window Max Size
+		window.set_max_inner_size(Some(winit::dpi::LogicalSize::new(self.x, self.y)));
+		if self.log {
+			println!("[INF]:: Setting Window Title...");
+		}
+		window.set_title(&self.title);
+		if std::path::Path::new("/tmp/maple_cursor_type").exists(){
+			if self.log {
+				println!("[INF]:: Setting Cursor Type...");
+			}
+			let mut cursor_file = std::fs::File::open("/tmp/maple_cursor_type").unwrap();
+			let mut cursor = String::from("");
+			match cursor_file.read_to_string(&mut cursor){
+				Ok(_) => print!(""),
+				Err(err) => println!("[ERR]:: Failed to read from /tmp/maple_cursor_type! Error: \n {}", err)
+			}
+			if self.log {
+				println!("[INF]:: Trying to set cursor type to {}...", cursor);
+			}
+			// Detect What cursor it is
+			if cursor.contains("CrossHair"){
+				// Crosshair
+				window.set_cursor_icon(winit::window::CursorIcon::Crosshair);
+			}else if cursor.contains("Hand"){
+				// Hand
+				window.set_cursor_icon(winit::window::CursorIcon::Hand);
+			}else if cursor.contains("Default") || cursor.contains("Arrow"){
+				// Arrow Or Default
+				window.set_cursor_icon(winit::window::CursorIcon::Arrow);
+			}else if cursor.contains("QuestionMark"){
+				// What?
+				window.set_cursor_icon(winit::window::CursorIcon::Help);
+			}else if cursor.contains("Waiting") ||cursor.contains("BeachBall") {
+				// Waiting
+				window.set_cursor_icon(winit::window::CursorIcon::Wait);
+			}else if cursor.contains("Text"){
+				// Text Input
+				window.set_cursor_icon(winit::window::CursorIcon::Text);
+			}else if cursor.contains("MagnifyIn"){
+				// Magnify In
+				window.set_cursor_icon(winit::window::CursorIcon::ZoomIn);
+			}else if cursor.contains("MagnifyOut"){
+				// Magnify Out
+				window.set_cursor_icon(winit::window::CursorIcon::ZoomOut);
 			}else {
-				return true
-			}
-		}
-	}
-	pub fn set_fullscreen(&self){
-		unsafe {
-			IS_FULLSCREEN = true;
-		}
-	}
-	pub fn set_icon(&self, icon: &str){
-		info!("Caching {} as maple-window-icon.png...", icon);
-		let mut img_file = File::open(icon).unwrap();
-		let mut img_data = Vec::new();
-		match img_file.read_to_end(&mut img_data){
-			Ok(_) => println!("Read data from {}!", icon),
-			Err(err) => println!("{}", err)
-		}
-		match std::fs::write("maple-window-icon.png", img_data){
-			Ok(_) => println!("Saved Cursor image to maple-window-icon.png"),
-			Err(err) => println!("{}! Failed to save cursor image to maple-window-icon.png!", err)
-		}
-	}
-	pub fn set_cursor_image(&self, image: &str){
-		let mut img_file = File::open(image).unwrap();
-		let mut img_data = Vec::new();
-		match img_file.read_to_end(&mut img_data){
-			Ok(_) => println!("Read data from {}!", image),
-			Err(err) => println!("{}", err)
-		}
-		match std::fs::write("maple-cursor-image.png", img_data){
-			Ok(_) => println!("Saved Cursor image tomaple-cursor-image.png"),
-			Err(err) => println!("{}! Failed to save cursor image to maple-cursor-image.png!", err)
-		}
-	}
-	pub fn set_cursor_type(&self, cursor: &str){
-		unsafe {
-			if cursor == "hand" {
-				HAND_CURSOR = true;
-			}else if cursor == "default" {
-				DEFAULT_CURSOR = true;
-			}else if cursor == "crosshair" {
-				CROSSHAIR_CURSOR = true;
-			}
-		}
-	}
-	pub fn start_window(&self, load_func: fn(String) -> String){
-		println!("Starting SimpleLogger...");
-	    SimpleLogger::new().init().unwrap();
-    	info!("Creating Window...");
-    	let mut glfw = glfw::init(glfw::FAIL_ON_ERRORS).unwrap();
-		let (mut window, _events) = glfw.create_window(self.get_width(), self.get_height(), &self.get_title().to_string(), glfw::WindowMode::Windowed)
-		     .expect("Failed to create GLFW window.");
-		window.set_key_polling(true);
-		window.make_current();
-
-		info!("Window Created!");
-		info!("Checking for cursor type...");
-		unsafe {
-			if CROSSHAIR_CURSOR {
-				info!("Setting Cursor type to crosshair...");
-				let crosshair_cursor = glfw::Cursor::standard(glfw::StandardCursor::Crosshair);
-				window.set_cursor(Some(crosshair_cursor));
-			}else if HAND_CURSOR {
-				info!("Setting Cursor type to hand...");
-				let hand_cursor = glfw::Cursor::standard(glfw::StandardCursor::Hand);
-				window.set_cursor(Some(hand_cursor));
-			}else if DEFAULT_CURSOR{
-				info!("Setting Cursor type to default...");
-				let arrow_cursor = glfw::Cursor::standard(glfw::StandardCursor::Arrow);
-				window.set_cursor(Some(arrow_cursor));
-			}
-		}
-		if std::path::Path::new("maple-cursor-image.png").exists(){
-			if let DynamicImage::ImageRgba8(icon) = open_image("maple-cursor-image.png").unwrap() {
-        		//Resize icon while preserving aspect ratio
-        		let resized_icon = resize(&icon, 32, icon.height() / icon.width() * 32, Nearest);
-
-        		let cursor = glfw::Cursor::create(resized_icon, 0, 0);
-
-				window.set_cursor(Some(cursor));
-			}
-		}
-		info!("Checking if window needs to be fullscreen...");
-		unsafe {
-			if IS_FULLSCREEN{
-				info!("Setting window to fullscreen...");
-			      glfw.with_primary_monitor_mut(|_: &mut _, m: Option<&glfw::Monitor>| {
-                            let monitor = m.unwrap();
-
-                            let mode = monitor.get_video_mode().unwrap();
-
-                            window.set_monitor(
-                                glfw::WindowMode::FullScreen(&monitor),
-                                0,
-                                0,
-                                mode.width,
-                                mode.height,
-                                Some(mode.refresh_rate),
-                            );
-
-                            info!(
-                                "{}x{} fullscreen enabled at {}Hz on monitor {}",
-                                mode.width,
-                                mode.height,
-                                mode.refresh_rate,
-                                monitor.get_name().unwrap()
-                            );
-                    });
-            }
-
-		}
-		info!("Checking for window icon...");
-		if std::path::Path::new("maple-window-icon.png").exists(){
-			if let DynamicImage::ImageRgba8(icon) = open_image("maple-window-icon.png").unwrap() {
-				//Set the icon to be multiple sizes of the same icon to account for scaling
-				info!("Setting Window Icon...");
-				window.set_icon(vec![
-					resize(&icon, 16, 16, Nearest),
-					resize(&icon, 32, 32, Nearest),
-					resize(&icon, 48, 48, Nearest),
-				]);
-				info!("Done Setting Window Icon!");
-			}
-		}
-		info!("Running load_func code on other thread...");
-		std::thread::spawn(move||{
-			// Load functions into thread
-			pub fn open() -> bool {
-				unsafe {
-					return IS_OPEN;
+				if self.log {
+					println!("[WAR]:: No Such Cursor Type registered as {}! Using Default Cursor Type", cursor);
 				}
+				window.set_cursor_icon(winit::window::CursorIcon::Arrow);
 			}
-			load_func("Start".to_string());
-		});
-
-		unsafe {
-			IS_OPEN = true;
+			match std::fs::remove_file("/tmp/maple_cursor_type"){
+				Ok(_) => print!(""),
+				Err(err) => println!("[ERR]:: Failed to delete /tmp/maple_cursor_image! Error: \n{}", err)
+			}
 		}
-		while !window.should_close() {
-		    glfw.poll_events();
- 	  }
-  }
-  pub fn cleanup(&self){
-	  info!("Removing Caches...");
-	  if std::path::Path::new("maple-cursor-image.png").exists(){
-		  match std::fs::remove_file("maple-cursor-image.png"){
-			  Ok(_) => println!("Removed Cursor icon cache!"),
-			  Err(err) => println!("Error: {}! Failed to remove cursor icon cache!", err)
-		  }
-	  }
-  }
+		if self.log {
+			println!("[INF]:: Running Event Loop...");
+		}
+		event_loop.run(move |event, _, control_flow| {
+			*control_flow = ControlFlow::Wait;
+			match event {
+				Event::WindowEvent {
+					event: WindowEvent::CloseRequested,
+					window_id,
+				} if window_id == window.id() => *control_flow = ControlFlow::Exit,
+				_ => (),
+			}
+		});
+	}
 }
